@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Session } from "next-auth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,6 +41,8 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
   const [publicGames, setPublicGames] = useState<Game[]>(initialPublicGames);
   const [userGames, setUserGames] = useState<Game[]>(initialUserGames);
   const pathname = usePathname();
+  const router = useRouter();
+
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -82,6 +84,7 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
           htmlContent: data.htmlContent,
           title: data.title,
         });
+        router.push(`/game/${data.gameId}`);
         // 刷新用户游戏列表
         if (session?.user?.email) {
           const userGamesResponse = await fetch("/api/games?type=user");
