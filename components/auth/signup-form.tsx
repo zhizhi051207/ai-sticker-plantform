@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Loader2, Mail, Lock, User } from "lucide-react";
 
 export function SignUpForm() {
@@ -47,29 +48,24 @@ export function SignUpForm() {
         }),
       });
 
-      const signupData = await signupResponse.json();
+      const signupContentType = signupResponse.headers.get("content-type") || "";
+      const signupData = signupContentType.includes("application/json")
+        ? await signupResponse.json()
+        : { error: await signupResponse.text() };
 
       if (!signupResponse.ok) {
         throw new Error(signupData.error || "Failed to create account");
       }
 
-      // 2. 自动登录
-      const loginResponse = await fetch("/api/auth/callback/credentials", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          redirect: false,
-        }),
+      // 2. 自动登录（使用 next-auth 的 signIn，避免 HTML 重定向）
+      const loginResult = await signIn("credentials", {
+        redirect: false,
+        email: formData.email,
+        password: formData.password,
       });
 
-      const loginData = await loginResponse.json();
-
-      if (!loginResponse.ok) {
-        throw new Error(loginData.error || "Account created but failed to log in");
+      if (loginResult?.error) {
+        throw new Error(loginResult.error || "Account created but failed to log in");
       }
 
       // 注册并登录成功，重定向到首页
