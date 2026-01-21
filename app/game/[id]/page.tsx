@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Gamepad2, Globe, Calendar, User } from "lucide-react";
 import Link from "next/link";
 
+export const runtime = "nodejs";
+
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }

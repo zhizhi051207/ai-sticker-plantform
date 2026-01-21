@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Gamepad2, User, Calendar, Eye } from "lucide-react";
 import Link from "next/link";
 
+export const runtime = "nodejs";
+
+
 export default async function PublicGamesPage() {
   const games = await getPublicGames(20);
 

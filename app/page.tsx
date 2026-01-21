@@ -1,6 +1,9 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { getPublicGames, getUserGames } from "@/lib/db";
+
+export const runtime = "nodejs";
+
 import HomeClient from "@/components/home-client";
 
 export default async function Home() {
