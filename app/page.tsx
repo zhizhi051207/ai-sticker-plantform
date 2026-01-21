@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth-options";
 import { getPublicGames, getUserGames } from "@/lib/db";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 import HomeClient from "@/components/home-client";
 
