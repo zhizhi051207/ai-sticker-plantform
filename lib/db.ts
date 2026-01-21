@@ -46,7 +46,13 @@ async function resolveUserId(userIdOrEmail: string): Promise<string | null> {
     return created.id;
   }
 
-  return userIdOrEmail;
+  // treat as user id
+  const existing = await prisma.user.findUnique({
+    where: { id: userIdOrEmail },
+    select: { id: true },
+  });
+  if (existing) return existing.id;
+  return null;
 }
 
 // 游戏操作

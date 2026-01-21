@@ -58,10 +58,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 调用OpenRouter Meta Llama 3.1 8B Instruct 生成HTML游戏
-    console.log("Calling Meta Llama 3.1 8B Instruct with prompt:", prompt.substring(0, 100));
+    // 调用 OpenRouter OpenAI GPT-5.1-Codex-Mini
+    console.log("Calling OpenAI GPT-5.1-Codex-Mini with prompt:", prompt.substring(0, 100));
     const completion = await openai.chat.completions.create({
-      model: "meta-llama/llama-3.1-8b-instruct", // OpenRouter官方模型ID
+      model: "openai/gpt-5.1-codex-mini",
+      provider: { order: ["openai"] },
       messages: [
         {
           role: "system",
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
       ],
       temperature: 0.7,
       max_tokens: 4096,
-    });
+    } as any);
 
     let htmlContent = completion.choices[0].message.content;
     if (!htmlContent) {
@@ -105,13 +106,14 @@ export async function POST(request: NextRequest) {
       prompt,
       htmlContent,
       isPublic: true,
-      userId: session.user.id || session.user.email, // 使用用户ID或邮箱作为userId
+      userId: session.user.email, // 使用邮箱确保存在用户记录
     });
 
     return NextResponse.json({
       success: true,
       gameId: game.id,
       title: game.title,
+      htmlContent: game.htmlContent,
       message: "Game generated successfully!",
     });
   } catch (error: any) {
@@ -124,7 +126,7 @@ export async function POST(request: NextRequest) {
     } else if (error.message?.includes("API key")) {
       errorMessage = "Invalid OpenRouter API key. Please check your configuration.";
     } else if (error.message?.includes("model")) {
-      errorMessage = "Model configuration error. Please check if Meta Llama 3.1 8B Instruct (meta-llama/llama-3.1-8b-instruct) is available on OpenRouter.";
+      errorMessage = "Model configuration error. Please check if OpenAI GPT-5.1-Codex-Mini (openai/gpt-5.1-codex-mini) is available on OpenRouter.";
     }
 
     return NextResponse.json(

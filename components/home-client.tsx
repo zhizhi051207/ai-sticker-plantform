@@ -32,7 +32,9 @@ interface HomeClientProps {
 export default function HomeClient({ session, initialPublicGames, initialUserGames }: HomeClientProps) {
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
-  const [generatedGame, setGeneratedGame] = useState<string | null>(null);
+  const [generatedGame, setGeneratedGame] = useState<
+    { id: string; htmlContent: string; title: string } | null
+  >(null);
   const [publicGames, setPublicGames] = useState<Game[]>(initialPublicGames);
   const [userGames, setUserGames] = useState<Game[]>(initialUserGames);
 
@@ -47,7 +49,11 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
       });
       const data = await response.json();
       if (data.success) {
-        setGeneratedGame(data.gameId);
+        setGeneratedGame({
+          id: data.gameId,
+          htmlContent: data.htmlContent,
+          title: data.title,
+        });
         // 刷新用户游戏列表
         if (session?.user?.email) {
           const userGamesResponse = await fetch("/api/games?type=user");
@@ -223,13 +229,23 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
           <CardHeader>
             <CardTitle className="text-primary">Game Generated!</CardTitle>
             <CardDescription>
-              Your game is ready to play. You can view it in your games list.
+              Your game is ready to play right here. You can also open it in a
+              full page.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
+            <div className="border rounded-lg overflow-hidden">
+              <iframe
+                srcDoc={generatedGame.htmlContent}
+                title={generatedGame.title}
+                className="w-full h-[500px] border-0"
+                sandbox="allow-scripts allow-same-origin allow-pointer-lock allow-popups allow-forms allow-popups-to-escape-sandbox"
+                allow="gamepad; fullscreen; microphone; camera; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+              />
+            </div>
             <div className="flex gap-4">
               <Button asChild>
-                <Link href={`/game/${generatedGame}`}>Play Now</Link>
+                <Link href={`/game/${generatedGame.id}`}>Open Full Page</Link>
               </Button>
               <Button variant="outline" asChild>
                 <Link href="/my-games">View All My Games</Link>
