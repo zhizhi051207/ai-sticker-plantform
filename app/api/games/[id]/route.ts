@@ -17,9 +17,17 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     }
 
     const { id } = await context.params;
-    const { isPublic } = await request.json();
-    if (typeof isPublic !== "boolean") {
-      return NextResponse.json({ error: "isPublic must be boolean" }, { status: 400 });
+    const { isPublic, title } = await request.json();
+
+    if (typeof isPublic !== "boolean" && typeof title !== "string") {
+      return NextResponse.json(
+        { error: "Provide isPublic or title" },
+        { status: 400 }
+      );
+    }
+
+    if (typeof title === "string" && !title.trim()) {
+      return NextResponse.json({ error: "Title cannot be empty" }, { status: 400 });
     }
 
     const game = await prisma.game.findUnique({
@@ -40,7 +48,10 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
     const updated = await prisma.game.update({
       where: { id },
-      data: { isPublic },
+      data: {
+        ...(typeof isPublic === "boolean" ? { isPublic } : {}),
+        ...(typeof title === "string" ? { title: title.trim() } : {}),
+      },
     });
 
     return NextResponse.json({ success: true, game: updated });

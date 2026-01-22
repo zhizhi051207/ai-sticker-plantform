@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Calendar, Eye, Copy, Trash2, Lock, Globe } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,6 +20,8 @@ interface Game {
 export default function MyGamesClient({ initialGames }: { initialGames: Game[] }) {
   const [games, setGames] = useState<Game[]>(initialGames);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const router = useRouter();
 
   const toggleVisibility = async (id: string, nextPublic: boolean) => {
@@ -39,6 +42,42 @@ export default function MyGamesClient({ initialGames }: { initialGames: Game[] }
       setLoadingId(null);
     }
   };
+  const startRename = (game: Game) => {
+    setRenamingId(game.id);
+    setRenameValue(game.title);
+  };
+
+  const cancelRename = () => {
+    setRenamingId(null);
+    setRenameValue("");
+  };
+
+  const submitRename = async (id: string) => {
+    if (!renameValue.trim()) {
+      alert("Title cannot be empty");
+      return;
+    }
+    setLoadingId(id);
+    try {
+      const res = await fetch(`/api/games/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: renameValue.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Failed to rename");
+      setGames((prev) => prev.map((g) => (g.id === id ? { ...g, title: renameValue.trim() } : g)));
+      setRenamingId(null);
+      setRenameValue("");
+      router.refresh();
+    } catch (e: any) {
+      alert(e?.message || "Failed to rename");
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+
 
   const deleteGame = async (id: string) => {
     if (!confirm("确定删除该游戏？此操作不可撤销。")) return;
@@ -100,6 +139,35 @@ export default function MyGamesClient({ initialGames }: { initialGames: Game[] }
                 </Link>
               </Button>
             </div>
+            <Button variant="secondary" className="w-full" asChild>
+              <Link href={`/game/${game.id}/edit`}>Edit This Game</Link>
+            </Button>
+            {renamingId === game.id ? (
+              <div className="space-y-2">
+                <Input
+                  value={renameValue}
+                  onChange={(e) => setRenameValue(e.target.value)}
+                  placeholder="New game title"
+                  disabled={loadingId === game.id}
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    className="w-full"
+                    onClick={() => submitRename(game.id)}
+                    disabled={loadingId === game.id}
+                  >
+                    Save
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={cancelRename} disabled={loadingId === game.id}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button variant="outline" className="w-full" onClick={() => startRename(game)}>
+                Rename
+              </Button>
+            )}
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="secondary"
