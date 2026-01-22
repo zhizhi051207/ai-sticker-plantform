@@ -31,6 +31,13 @@ export default async function GamePage({ params }: PageProps) {
     game.user?.email === session?.user?.email;
 
 
+  const isHtmlComplete = (content: string) => {
+    const lower = content.toLowerCase();
+    return lower.includes("</html>") || lower.includes("</body>");
+  };
+  const htmlValid = isHtmlComplete(game.htmlContent);
+
+
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-6">
@@ -77,11 +84,17 @@ export default async function GamePage({ params }: PageProps) {
           </CardHeader>
           <CardContent>
             <div className="border rounded-lg overflow-hidden">
-              <GameIframe
-                html={game.htmlContent}
-                title={game.title}
-                minHeight={360}
-              />
+              {htmlValid ? (
+                <GameIframe
+                  html={game.htmlContent}
+                  title={game.title}
+                  minHeight={360}
+                />
+              ) : (
+                <div className="p-6 text-sm text-destructive">
+                  当前版本的HTML不完整，无法渲染游戏。请点击右侧“Edit This Game”重新生成。
+                </div>
+              )}
             </div>
             <div className="mt-4 text-sm text-muted-foreground">
               <p>
