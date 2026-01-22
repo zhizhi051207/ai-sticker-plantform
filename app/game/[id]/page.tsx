@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Gamepad2, Globe, Calendar, User } from "lucide-react";
 import Link from "next/link";
 import GameIframe from "@/components/game-iframe";
+import GameActionsClient from "@/components/game-actions-client";
+
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -139,6 +141,9 @@ export default async function GamePage({ params }: PageProps) {
                   Download HTML
                 </a>
               </Button>
+              {isOwner && (
+                <GameActionsClient gameId={game.id} isPublic={game.isPublic} />
+              )}
               <Button variant="outline" className="w-full" asChild>
                 <Link href="/">Create Similar Game</Link>
               </Button>
