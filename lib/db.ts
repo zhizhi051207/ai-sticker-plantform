@@ -16,6 +16,7 @@ export interface GameInput {
   description?: string;
   prompt: string;
   htmlContent: string;
+  contentType?: "svg" | "lottie" | "svg-animated";
   isPublic: boolean;
   userId: string;
 }
@@ -66,6 +67,7 @@ export async function createGame(data: GameInput) {
       description: data.description || null,
       prompt: data.prompt,
       htmlContent: data.htmlContent,
+      contentType: data.contentType || "svg",
       isPublic: data.isPublic,
       userId,
     },

@@ -34,7 +34,7 @@ export default function GameActionsClient({
   };
 
   const deleteGame = async () => {
-    if (!confirm("确定删除该游戏？此操作不可撤销。")) return;
+    if (!confirm("确定删除该表情包？此操作不可撤销。")) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/games/${gameId}`, { method: "DELETE" });
@@ -56,7 +56,7 @@ export default function GameActionsClient({
       </Button>
       <Button variant="destructive" className="w-full" onClick={deleteGame} disabled={loading}>
         <Trash2 className="h-4 w-4 mr-2" />
-        Delete Game
+        Delete Sticker
       </Button>
     </div>
   );

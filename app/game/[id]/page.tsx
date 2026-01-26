@@ -4,9 +4,10 @@ import { authOptions } from "@/lib/auth-options";
 import { getGame } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Gamepad2, Globe, Calendar, User } from "lucide-react";
+import { ArrowLeft, Image, Globe, Calendar, User } from "lucide-react";
 import Link from "next/link";
-import GameIframe from "@/components/game-iframe";
+import StickerRenderer from "@/components/sticker-renderer";
+import LottieActionsClient from "@/components/lottie-actions-client";
 import GameActionsClient from "@/components/game-actions-client";
 
 
@@ -31,13 +32,9 @@ export default async function GamePage({ params }: PageProps) {
   const isOwner =
     (session?.user?.id && game.userId === session.user.id) ||
     game.user?.email === session?.user?.email;
+  const isLottie = game.contentType === "lottie";
+  const isAnimatedSvg = game.contentType === "svg-animated";
 
-
-  const isHtmlComplete = (content: string) => {
-    const lower = content.toLowerCase();
-    return lower.includes("</html>") || lower.includes("</body>");
-  };
-  const htmlValid = isHtmlComplete(game.htmlContent);
 
 
   return (
@@ -73,8 +70,8 @@ export default async function GamePage({ params }: PageProps) {
             {new Date(game.createdAt).toLocaleDateString()}
           </div>
           <div className="flex items-center gap-1">
-            <Gamepad2 className="h-4 w-4" />
-            AI Generated
+            <Image className="h-4 w-4" />
+            {isLottie ? "AI Animated Sticker" : isAnimatedSvg ? "AI Animated SVG Sticker" : "AI Sticker"}
           </div>
         </div>
       </div>
@@ -82,33 +79,36 @@ export default async function GamePage({ params }: PageProps) {
       <div className="grid md:grid-cols-3 gap-8">
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Play Game</CardTitle>
+            <CardTitle>Sticker Preview</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="border rounded-lg overflow-hidden">
-              {htmlValid ? (
-                <GameIframe
-                  html={game.htmlContent}
-                  title={game.title}
-                  minHeight={360}
-                />
-              ) : (
-                <div className="p-6 text-sm text-destructive">
-                  当前版本的HTML不完整，无法渲染游戏。请点击右侧“Edit This Game”重新生成。
-                </div>
-              )}
-            </div>
-            <div className="mt-4 text-sm text-muted-foreground">
-              <p>
-                The game runs in an iframe with sandboxed security. If you encounter issues, try refreshing.
-              </p>
+            <div className="border rounded-lg overflow-hidden bg-muted p-6">
+              <StickerRenderer
+                content={game.htmlContent}
+                contentType={
+                  game.contentType === "lottie"
+                    ? "lottie"
+                    : game.contentType === "svg-animated"
+                      ? "svg-animated"
+                      : "svg"
+                }
+                title={game.title}
+                className="w-full h-auto"
+              />
             </div>
           </CardContent>
         </Card>
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Game Details</CardTitle>
+              <CardTitle>Sticker Details</CardTitle>
+              <div>
+                <h3 className="font-semibold mb-1">Sticker Type</h3>
+                <p className="text-sm">
+                  {isLottie ? "Animated (Lottie/GIF)" : isAnimatedSvg ? "Animated SVG" : "Static SVG"}
+                </p>
+              </div>
+
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -131,21 +131,28 @@ export default async function GamePage({ params }: PageProps) {
               <CardTitle>Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {isOwner && (
+              {isOwner && !isLottie && (
                 <Button className="w-full" asChild>
-                  <Link href={`/game/${game.id}/edit`}>Edit This Game</Link>
+                  <Link href={`/game/${game.id}/edit`}>Edit Sticker</Link>
                 </Button>
               )}
-              <Button className="w-full" asChild>
-                <a href={`data:text/html;charset=utf-8,${encodeURIComponent(game.htmlContent)}`} download={`${game.title.replace(/\s+/g, '_')}.html`}>
-                  Download HTML
-                </a>
-              </Button>
+              {isLottie ? (
+                <LottieActionsClient title={game.title} lottieJson={game.htmlContent} />
+              ) : (
+                <Button className="w-full" asChild>
+                  <a
+                    href={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(game.htmlContent)}`}
+                    download={`${game.title.replace(/\s+/g, "_")}.svg`}
+                  >
+                    Download SVG
+                  </a>
+                </Button>
+              )}
               {isOwner && (
                 <GameActionsClient gameId={game.id} isPublic={game.isPublic} />
               )}
               <Button variant="outline" className="w-full" asChild>
-                <Link href="/">Create Similar Game</Link>
+                <Link href={`/?prompt=${encodeURIComponent(game.prompt)}`}>Create Similar Sticker</Link>
               </Button>
             </CardContent>
           </Card>

@@ -6,11 +6,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Calendar, Eye, Copy, Trash2, Lock, Globe } from "lucide-react";
 import Link from "next/link";
+import StickerRenderer from "@/components/sticker-renderer";
 import { useRouter } from "next/navigation";
+
 
 interface Game {
   id: string;
   title: string;
+  htmlContent: string;
+  contentType?: string;
   description: string | null;
   prompt: string;
   isPublic: boolean;
@@ -80,7 +84,7 @@ export default function MyGamesClient({ initialGames }: { initialGames: Game[] }
 
 
   const deleteGame = async (id: string) => {
-    if (!confirm("确定删除该游戏？此操作不可撤销。")) return;
+    if (!confirm("确定删除该表情包？此操作不可撤销。")) return;
     setLoadingId(id);
     try {
       const res = await fetch(`/api/games/${id}`, { method: "DELETE" });
@@ -99,7 +103,7 @@ export default function MyGamesClient({ initialGames }: { initialGames: Game[] }
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <div className="text-muted-foreground">No games yet</div>
+          <div className="text-muted-foreground">No stickers yet</div>
         </CardContent>
       </Card>
     );
@@ -112,10 +116,24 @@ export default function MyGamesClient({ initialGames }: { initialGames: Game[] }
           <CardHeader>
             <CardTitle className="line-clamp-1">{game.title}</CardTitle>
             <CardDescription className="line-clamp-2">
-              {game.description || "AI-generated game"}
+              {game.description || "AI-generated sticker"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex-grow">
+          <CardContent className="flex-grow space-y-4">
+            <div className="rounded-lg bg-muted p-4">
+              <StickerRenderer
+                content={game.htmlContent}
+                contentType={
+                  game.contentType === "lottie"
+                    ? "lottie"
+                    : game.contentType === "svg-animated"
+                      ? "svg-animated"
+                      : "svg"
+                }
+                title={game.title}
+                className="w-full h-auto"
+              />
+            </div>
             <div className="space-y-2 text-sm">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -130,24 +148,26 @@ export default function MyGamesClient({ initialGames }: { initialGames: Game[] }
           <CardContent className="border-t pt-4 space-y-2">
             <div className="grid grid-cols-2 gap-2">
               <Button className="w-full" asChild>
-                <Link href={`/game/${game.id}`}>Play</Link>
+                <Link href={`/game/${game.id}`}>View</Link>
               </Button>
               <Button variant="outline" className="w-full" asChild>
                 <Link href={`/?prompt=${encodeURIComponent(game.prompt)}`}>
                   <Copy className="h-4 w-4 mr-2" />
-                  Similar
+                  Similar Sticker
                 </Link>
               </Button>
             </div>
-            <Button variant="secondary" className="w-full" asChild>
-              <Link href={`/game/${game.id}/edit`}>Edit This Game</Link>
-            </Button>
+            {game.contentType !== "lottie" && (
+              <Button variant="secondary" className="w-full" asChild>
+                <Link href={`/game/${game.id}/edit`}>Edit Sticker</Link>
+              </Button>
+            )}
             {renamingId === game.id ? (
               <div className="space-y-2">
                 <Input
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
-                  placeholder="New game title"
+                  placeholder="New sticker title"
                   disabled={loadingId === game.id}
                 />
                 <div className="grid grid-cols-2 gap-2">

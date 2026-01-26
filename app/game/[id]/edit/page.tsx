@@ -22,6 +22,10 @@ export default async function GameEditPage({ params }: PageProps) {
   if (!game) {
     notFound();
   }
+  if (game.contentType === "lottie") {
+    redirect(`/game/${game.id}`);
+  }
+
 
   const isOwner =
     (session.user.id && game.userId === session.user.id) ||

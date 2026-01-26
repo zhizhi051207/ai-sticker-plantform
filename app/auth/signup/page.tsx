@@ -1,6 +1,6 @@
 import { SignUpForm } from "@/components/auth/signup-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Gamepad2 } from "lucide-react";
+import { Image } from "lucide-react";
 import Link from "next/link";
 
 export default function SignUpPage() {
@@ -10,14 +10,14 @@ export default function SignUpPage() {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <div className="bg-gradient-to-r from-gray-900 to-black p-3 rounded-full">
-              <Gamepad2 className="h-10 w-10 text-white" />
+              <Image className="h-10 w-10 text-white" />
             </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Create Your Account
           </h1>
           <p className="text-gray-600">
-            Join the AI Game Generator community
+            Join the AI Sticker Generator community
           </p>
         </div>
 
@@ -25,7 +25,7 @@ export default function SignUpPage() {
           <CardHeader>
             <CardTitle className="text-gray-900">Sign Up</CardTitle>
             <CardDescription className="text-gray-600">
-              Create an account to start generating AI games
+              Create an account to start generating AI stickers
             </CardDescription>
           </CardHeader>
           <CardContent>

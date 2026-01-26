@@ -32,6 +32,7 @@ model Game {
   description String?
   prompt      String    // 用户输入的原始提示词
   htmlContent String    // 生成的HTML游戏代码
+  contentType String    @default("svg") // svg | lottie
   isPublic    Boolean   @default(false)
   userId      String
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)

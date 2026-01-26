@@ -94,17 +94,17 @@ export async function POST(request: NextRequest) {
 
       const createEditCompletion = () =>
         openai.chat.completions.create({
-          model: "openai/gpt-5.1-codex-mini",
-          provider: { order: ["openai"] },
+          model: "google/gemini-3-flash-preview",
+          provider: { order: ["openrouter"] },
           messages: [
             {
               role: "system",
               content:
-                "You are a game developer AI. You will edit an existing HTML5 game. Apply the user's instructions to the provided HTML and return a full, self-contained HTML document. Preserve gameplay and interactivity. The result MUST be playable (not just a static preview). Keep all essential logic, input handlers, and render/update loops unless explicitly replaced. Return ONLY HTML code.",
+                "You are a sticker illustrator. You will edit an existing SVG sticker. Apply the user's instructions to the provided SVG and return a full, valid SVG document. Preserve style consistency. Return ONLY SVG code.",
             },
             {
               role: "user",
-              content: `Here is the current HTML:\n\n${game.htmlContent}\n\nEdit instructions: ${instruction}\n\nReturn the full updated HTML only.`,
+              content: `Here is the current SVG:\n\n${game.htmlContent}\n\nEdit instructions: ${instruction}\n\nReturn the full updated SVG only.`,
             },
           ],
           temperature: 0.4,

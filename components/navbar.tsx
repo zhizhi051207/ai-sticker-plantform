@@ -21,17 +21,17 @@ export function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-xl font-bold">AI Game Generator</span>
+            <span className="text-xl font-bold">AI Sticker Generator</span>
           </Link>
           <nav className="hidden md:flex items-center gap-4">
             <Link href="/" className="text-sm font-medium hover:text-primary">
               Home
             </Link>
             <Link href="/games" className="text-sm font-medium hover:text-primary">
-              Public Games
+              Public Stickers
             </Link>
             <Link href="/my-games" className="text-sm font-medium hover:text-primary">
-              My Games
+              My Stickers
             </Link>
             <Link href="/generate" className="text-sm font-medium hover:text-primary">
               Generate
@@ -64,7 +64,7 @@ export function Navbar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/my-games">My Games</Link>
+                  <Link href="/my-games">My Stickers</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/profile">Profile</Link>

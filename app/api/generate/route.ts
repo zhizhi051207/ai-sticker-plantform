@@ -44,7 +44,8 @@ export async function POST(request: NextRequest) {
     }
     console.log("SUCCESS: User authenticated:", session.user.email, "User ID:", session.user.id);
 
-    const { prompt } = await request.json();
+    const { prompt, isAnimated } = await request.json();
+    const animated = Boolean(isAnimated);
     if (!prompt || typeof prompt !== "string") {
       return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
     }
@@ -71,33 +72,40 @@ export async function POST(request: NextRequest) {
       return result;
     };
 
+
+    const ensureAnimatedSvg = (content: string) => {
+      if (!animated) return content;
+      const lower = content.toLowerCase();
+      if (lower.includes("<animate") || lower.includes("<animatetransform")) {
+        return content;
+      }
+      const inject = "<animateTransform attributeName=\"transform\" type=\"rotate\" from=\"0 512 512\" to=\"360 512 512\" dur=\"2s\" repeatCount=\"indefinite\" />";
+      return content.replace(/<svg([^>]*)>/i, `<svg$1>${inject}`);
+    };
+
     const isHtmlComplete = (content: string) => {
       const lower = content.toLowerCase();
-      return lower.includes("</html>") || lower.includes("</body>");
+      return lower.includes("</html>") || lower.includes("</body>") || lower.includes("</svg>");
     };
 
     console.log("Calling OpenAI GPT-5.1-Codex-Mini with prompt:", prompt.substring(0, 100));
+
+    const animationHint = animated
+      ? "Include SVG animation using <animate> and/or <animateTransform>."
+      : "No animation.";
+
     const createCompletion = () =>
       openai.chat.completions.create({
-        model: "openai/gpt-5.1-codex-mini",
-        provider: { order: ["openai"] },
+        model: "google/gemini-3-flash-preview",
+        provider: { order: ["openrouter"] },
         messages: [
           {
             role: "system",
-            content: `You are a game developer AI that creates polished, self-contained HTML5 games. Generate a complete HTML file with embedded CSS and JavaScript that implements the described game. The game should be playable directly in a browser, with no external dependencies. REQUIREMENTS:\n- Visual quality: modern UI, pleasing color palette, soft shadows, rounded corners, gradients, and subtle animations.\n- Layout: a centered game container with header/title, instruction panel, status/score HUD, and a clear play area.\n- Typography: choose a clean font stack and consistent spacing.\n- Feedback: hover/pressed states, game-over/win banner or toast.\n- Responsiveness: mobile-friendly, full width on small screens, scalable canvas or responsive grid.\n- Performance: lightweight, avoid heavy computations.\nRespond with ONLY the HTML code, no explanations.`,
+            content: `You are a sticker illustrator. Create a cute, clean SVG sticker based on the user prompt. Style: chibi proportions, big expressive eyes, soft pastel palette, clean bold outline, subtle shading, friendly mood. Composition: centered subject with generous padding, transparent background. OUTPUT:\n- Return ONLY valid SVG markup (no HTML, no code fences).\n- Use width=\"1024\" height=\"1024\" viewBox=\"0 0 1024 1024\".\n- Use simple paths/shapes; no external assets or embedded images.\n- Avoid text unless explicitly requested.\n- ${animationHint}`,
           },
           {
             role: "user",
-            content: `Create a polished game: ${prompt}. The HTML file should include:
-1. A canvas or DOM elements for the game
-2. Embedded CSS for modern styling (gradients, shadows, rounded corners)
-3. Embedded JavaScript for game logic
-4. Clear instructions on how to play
-5. A score/time/status display
-6. Responsive design that works on desktop and mobile
-7. Game states (start, playing, game over) with visual feedback
-8. Sound effects if possible using Web Audio (no external assets)
-Keep everything self-contained.`,
+            content: `Create a cute sticker SVG for: ${prompt}. Requirements:\n1. Single subject, centered, sticker-ready composition\n2. Thick clean outline and soft shading for depth\n3. Friendly, kawaii look with big expressive eyes\n4. High readability at small size\n5. 1:1 square composition\n6. ${animationHint}`,
           },
         ],
         temperature: 0.7,
@@ -112,12 +120,14 @@ Keep everything self-contained.`,
     }
 
     htmlContent = normalizeHtml(htmlContent);
+    htmlContent = ensureAnimatedSvg(htmlContent);
 
     if (!isHtmlComplete(htmlContent)) {
       console.warn("Generated HTML incomplete, retrying once...");
       const retryCompletion = await createCompletion();
       let retryContent = retryCompletion.choices[0].message.content || "";
       retryContent = normalizeHtml(retryContent);
+      retryContent = ensureAnimatedSvg(retryContent);
       if (isHtmlComplete(retryContent)) {
         htmlContent = retryContent;
       }
@@ -131,6 +141,7 @@ Keep everything self-contained.`,
       description: `AI-generated game from prompt: ${prompt}`,
       prompt,
       htmlContent,
+      contentType: animated ? "svg-animated" : "svg",
       isPublic: true,
       userId: session.user.email, // 使用邮箱确保存在用户记录
     });
@@ -140,6 +151,7 @@ Keep everything self-contained.`,
       gameId: game.id,
       title: game.title,
       htmlContent: game.htmlContent,
+      contentType: game.contentType,
       message: "Game generated successfully!",
     });
   } catch (error: any) {

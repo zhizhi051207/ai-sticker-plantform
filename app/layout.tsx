@@ -7,8 +7,8 @@ import { Navbar } from "@/components/navbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AI Game Generator",
-  description: "Generate mini games with AI",
+  title: "AI Sticker Generator",
+  description: "Generate stickers with AI",
 };
 
 export default function RootLayout({

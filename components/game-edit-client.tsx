@@ -18,17 +18,17 @@ export default function GameEditClient({ gameId, title, prompt, htmlContent }: G
   const router = useRouter();
   const [instruction, setInstruction] = useState("");
   const [html, setHtml] = useState(htmlContent);
-  const [loading, setLoading] = useState<"ai" | "html" | null>(null);
+  const [loading, setLoading] = useState<"ai" | "svg" | null>(null);
   const [error, setError] = useState("");
 
-  const handleEdit = async (mode: "ai" | "html") => {
+  const handleEdit = async (mode: "ai" | "svg") => {
     setError("");
     if (mode === "ai" && !instruction.trim()) {
       setError("请输入修改指令");
       return;
     }
-    if (mode === "html" && !html.trim()) {
-      setError("请输入完整的HTML源码");
+    if (mode === "svg" && !html.trim()) {
+      setError("请输入完整的SVG源码");
       return;
     }
 
@@ -41,16 +41,16 @@ export default function GameEditClient({ gameId, title, prompt, htmlContent }: G
           gameId,
           mode,
           instruction: mode === "ai" ? instruction : undefined,
-          htmlContent: mode === "html" ? html : undefined,
+          svgContent: mode === "svg" ? html : undefined,
         }),
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data?.error || "Failed to edit game");
+        throw new Error(data?.error || "Failed to edit sticker");
       }
       router.push(`/game/${data.gameId}`);
     } catch (err: any) {
-      setError(err?.message || "Failed to edit game");
+      setError(err?.message || "Failed to edit sticker");
     } finally {
       setLoading(null);
     }
@@ -60,7 +60,7 @@ export default function GameEditClient({ gameId, title, prompt, htmlContent }: G
     <div className="max-w-6xl mx-auto space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Edit: {title}</h1>
-        <p className="text-muted-foreground">基于已有游戏进行二次编辑，保存为新版本（不会覆盖原游戏）。</p>
+        <p className="text-muted-foreground">基于已有表情包进行二次编辑，保存为新版（不会覆盖原表情包）。</p>
       </div>
 
       {error && (
@@ -74,7 +74,7 @@ export default function GameEditClient({ gameId, title, prompt, htmlContent }: G
               <Sparkles className="h-5 w-5" />
               AI 修改指令
             </CardTitle>
-            <CardDescription>描述你想要的改动，例如：增加关卡、调整配色、加入音效</CardDescription>
+            <CardDescription>描述你想要的改动，例如：换成更可爱的表情、调整配色、加上文字</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
@@ -87,7 +87,7 @@ export default function GameEditClient({ gameId, title, prompt, htmlContent }: G
             <div className="text-xs text-muted-foreground">原始提示词：{prompt}</div>
             <Button className="w-full" onClick={() => handleEdit("ai")} disabled={loading !== null}>
               {loading === "ai" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading === "ai" ? "正在生成新版本..." : "用AI生成新版本"}
+              {loading === "ai" ? "正在生成新表情包..." : "用AI生成新表情包"}
             </Button>
           </CardContent>
         </Card>
@@ -96,21 +96,21 @@ export default function GameEditClient({ gameId, title, prompt, htmlContent }: G
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Code2 className="h-5 w-5" />
-              直接编辑HTML
+              直接编辑SVG
             </CardTitle>
-            <CardDescription>你可以直接修改源码，保存为新版本</CardDescription>
+            <CardDescription>你可以直接修改SVG源码，保存为新表情包</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
-              placeholder="粘贴或编辑HTML源码..."
+              placeholder="粘贴或编辑SVG源码..."
               value={html}
               onChange={(e) => setHtml(e.target.value)}
               className="min-h-[320px] font-mono text-xs"
-              disabled={loading === "html"}
+              disabled={loading !== null}
             />
-            <Button className="w-full" variant="outline" onClick={() => handleEdit("html")} disabled={loading !== null}>
-              {loading === "html" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading === "html" ? "正在保存新版本..." : "保存为新版本"}
+            <Button className="w-full" variant="outline" onClick={() => handleEdit("svg")} disabled={loading !== null}>
+              {loading === "svg" && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {loading === "svg" ? "正在保存新表情包..." : "保存为新表情包"}
             </Button>
           </CardContent>
         </Card>

@@ -1,6 +1,6 @@
 import { SignInForm } from "@/components/auth/signin-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Gamepad2 } from "lucide-react";
+import { Image } from "lucide-react";
 import Link from "next/link";
 
 export default function SignInPage() {
@@ -10,14 +10,14 @@ export default function SignInPage() {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <div className="bg-gradient-to-r from-gray-900 to-black p-3 rounded-full">
-              <Gamepad2 className="h-10 w-10 text-white" />
+              <Image className="h-10 w-10 text-white" />
             </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome to AI Game Generator
+            Welcome to AI Sticker Generator
           </h1>
           <p className="text-gray-600">
-            Sign in to create and play AI-generated games
+            Sign in to create and manage AI-generated stickers
           </p>
         </div>
 
@@ -25,7 +25,7 @@ export default function SignInPage() {
           <CardHeader>
             <CardTitle className="text-gray-900">Sign In</CardTitle>
             <CardDescription className="text-gray-600">
-              Enter your credentials to access your games
+              Enter your credentials to access your stickers
             </CardDescription>
           </CardHeader>
           <CardContent>
