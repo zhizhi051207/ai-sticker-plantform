@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Session } from "next-auth";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Gamepad2, Sparkles } from "lucide-react";
+import { Loader2, Image, Sparkles } from "lucide-react";
+import StickerRenderer from "@/components/sticker-renderer";
 import Link from "next/link";
-import GameIframe from "@/components/game-iframe";
 
 interface Game {
   id: string;
@@ -16,6 +17,7 @@ interface Game {
   description: string | null;
   prompt: string;
   htmlContent: string;
+  contentType?: string;
   isPublic: boolean;
   userId: string;
   createdAt: Date;
@@ -35,8 +37,9 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [promptError, setPromptError] = useState("");
+  const [isAnimated, setIsAnimated] = useState(false);
   const [generatedGame, setGeneratedGame] = useState<
-    { id: string; htmlContent: string; title: string } | null
+    { id: string; htmlContent: string; title: string; contentType?: "svg" | "lottie" | "svg-animated" } | null
   >(null);
   const [publicGames, setPublicGames] = useState<Game[]>(initialPublicGames);
   const [userGames, setUserGames] = useState<Game[]>(initialUserGames);
@@ -61,7 +64,11 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
-      setPromptError("请输入游戏描述");
+      setPromptError("请输入表情包描述");
+      return;
+    }
+    if (!session?.user?.email) {
+      router.push("/api/auth/signin?callbackUrl=/generate");
       return;
     }
     setPromptError("");
@@ -73,7 +80,7 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+        body: JSON.stringify({ prompt, isAnimated }),
         signal: controller.signal,
       });
 
@@ -83,6 +90,7 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
           id: data.gameId,
           htmlContent: data.htmlContent,
           title: data.title,
+          contentType: data.contentType,
         });
         router.push(`/game/${data.gameId}`);
         // 刷新用户游戏列表
@@ -100,14 +108,14 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
           setPublicGames(games);
         }
       } else {
-        alert("Failed to generate game: " + data.error);
+        alert("Failed to generate sticker: " + data.error);
       }
     } catch (error: any) {
       if (error?.name === "AbortError") {
         return;
       }
       console.error(error);
-      alert("Error generating game");
+      alert("Error generating sticker");
     } finally {
       abortRef.current = null;
       setLoading(false);
@@ -130,10 +138,10 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
     <div className="max-w-6xl mx-auto">
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4">
-          Generate Mini Games with <span className="text-primary">AI</span>
+          Generate Stickers with <span className="text-primary">AI</span>
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Describe a game idea in one sentence, and our AI will create a playable HTML game for you.
+          Describe a sticker idea in one sentence, and our AI will create a cute, shareable sticker for you.
         </p>
       </div>
 
@@ -142,15 +150,15 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5" />
-              Create Your Game
+              Create Your Sticker
             </CardTitle>
             <CardDescription>
-              Enter a prompt like "a snake game where you eat apples" or "a puzzle with rotating blocks"
+              Enter a prompt like "a sleepy cat with a coffee" or "a chibi astronaut waving"
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
-              placeholder="Describe your game idea..."
+              placeholder="Describe your sticker idea..."
               value={prompt}
               onChange={(e) => {
                 setPrompt(e.target.value);
@@ -162,6 +170,17 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
             {promptError && (
               <div className="text-sm text-destructive">{promptError}</div>
             )}
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="animated-sticker"
+                checked={isAnimated}
+                onCheckedChange={(checked) => setIsAnimated(checked === true)}
+                disabled={loading}
+              />
+              <label htmlFor="animated-sticker" className="text-sm text-muted-foreground">
+                Generate Animated Sticker (SVG)
+              </label>
+            </div>
 
             <div className="flex justify-between items-center">
               <div className="text-sm text-muted-foreground">
@@ -172,13 +191,13 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
                     <Link href="/api/auth/signin" className="text-primary hover:underline">
                       Sign in
                     </Link>{" "}
-                    to save your games
+                    to save your stickers
                   </span>
                 )}
               </div>
               <Button onClick={handleGenerate} disabled={loading || !prompt.trim()}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {loading ? "Generating..." : "Generate Game"}
+                {loading ? "Generating..." : "Generate Sticker"}
               </Button>
             </div>
           </CardContent>
@@ -187,10 +206,10 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Gamepad2 className="h-5 w-5" />
-              Public Games
+              <Image className="h-5 w-5" />
+              Public Stickers
             </CardTitle>
-            <CardDescription>Recently created games by the community</CardDescription>
+            <CardDescription>Recently created stickers by the community</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -199,7 +218,7 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
                   <div key={game.id} className="p-3 border rounded-lg hover:bg-accent/50">
                     <div className="font-medium">{game.title}</div>
                     <div className="text-sm text-muted-foreground">
-                      {game.description || "AI-generated game"}
+                      {game.description || "AI-generated sticker"}
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
                       By {game.user?.name || "Anonymous"} • {formatDate(game.createdAt)}
@@ -208,23 +227,23 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
                 ))
               ) : (
                 <div className="p-3 border rounded-lg text-center text-muted-foreground">
-                  No public games yet. Be the first to create one!
+                  No public stickers yet. Be the first to create one!
                 </div>
               )}
             </div>
             <Button variant="outline" className="w-full mt-4" asChild>
-              <Link href="/games">View All Public Games</Link>
+              <Link href="/games">View All Public Stickers</Link>
             </Button>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Your Games</CardTitle>
+            <CardTitle>Your Stickers</CardTitle>
             <CardDescription>
               {session
-                ? "Manage your created games"
-                : "Sign in to create and manage your games"}
+                ? "Manage your created stickers"
+                : "Sign in to create and manage your stickers"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -235,7 +254,7 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
                     <div key={game.id} className="p-3 border rounded-lg hover:bg-accent/50">
                       <div className="font-medium">{game.title}</div>
                       <div className="text-sm text-muted-foreground">
-                        {game.description || "AI-generated game"}
+                        {game.description || "AI-generated sticker"}
                       </div>
                       <div className="text-xs text-muted-foreground mt-1">
                         Created {formatDate(game.createdAt)}
@@ -244,14 +263,14 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
                   ))
                 ) : (
                   <div className="text-center py-4">
-                    <p className="text-muted-foreground">You haven't created any games yet</p>
+                    <p className="text-muted-foreground">You haven't created any stickers yet</p>
                   </div>
                 )}
               </div>
             ) : (
               <div className="text-center py-8">
-                <Gamepad2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-4">Sign in to start creating games</p>
+                <Image className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground mb-4">Sign in to start creating stickers</p>
                 <Button asChild>
                   <Link href="/api/auth/signin">Sign In</Link>
                 </Button>
@@ -259,7 +278,7 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
             )}
             {session && (
               <Button variant="outline" className="w-full mt-4" asChild>
-                <Link href="/my-games">Manage All Games</Link>
+                <Link href="/my-games">Manage All Stickers</Link>
               </Button>
             )}
           </CardContent>
@@ -269,26 +288,32 @@ export default function HomeClient({ session, initialPublicGames, initialUserGam
       {generatedGame && (
         <Card className="mt-8 border-primary">
           <CardHeader>
-            <CardTitle className="text-primary">Game Generated!</CardTitle>
+            <CardTitle className="text-primary">Sticker Generated!</CardTitle>
             <CardDescription>
-              Your game is ready to play right here. You can also open it in a
-              full page.
+              Your sticker is ready to use right here. You can also open it in a full page.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="border rounded-lg overflow-hidden">
-              <GameIframe
-                html={generatedGame.htmlContent}
+            <div className="border rounded-lg overflow-hidden bg-muted">
+              <StickerRenderer
+                content={generatedGame.htmlContent}
+                contentType={
+                  generatedGame.contentType === "lottie"
+                    ? "lottie"
+                    : generatedGame.contentType === "svg-animated"
+                      ? "svg-animated"
+                      : "svg"
+                }
                 title={generatedGame.title}
-                minHeight={360}
+                className="w-full h-auto"
               />
             </div>
             <div className="flex gap-4">
               <Button asChild>
-                <Link href={`/game/${generatedGame.id}`}>Open Full Page</Link>
+                <Link href={`/game/${generatedGame.id}`}>Open Sticker Page</Link>
               </Button>
               <Button variant="outline" asChild>
-                <Link href="/my-games">View All My Games</Link>
+                <Link href="/my-games">View All My Stickers</Link>
               </Button>
             </div>
           </CardContent>
