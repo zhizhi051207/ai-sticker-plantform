@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Sparkles, Code2 } from "lucide-react";
+import { Loader2, Sparkles, Code2, Copy, Check } from "lucide-react";
 
 interface GameEditClientProps {
   gameId: string;
@@ -20,6 +20,24 @@ export default function GameEditClient({ gameId, title, prompt, htmlContent }: G
   const [html, setHtml] = useState(htmlContent);
   const [loading, setLoading] = useState<"ai" | "svg" | null>(null);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+  const copyTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const handleCopy = async () => {
+    if (copyTimer.current) {
+      clearTimeout(copyTimer.current);
+      copyTimer.current = null;
+    }
+    try {
+      await navigator.clipboard.writeText(html);
+      setCopied(true);
+      copyTimer.current = setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    } catch (err) {
+      setError("复制失败，请重试");
+    }
+  };
 
   const handleEdit = async (mode: "ai" | "svg") => {
     setError("");
@@ -94,11 +112,25 @@ export default function GameEditClient({ gameId, title, prompt, htmlContent }: G
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Code2 className="h-5 w-5" />
-              直接编辑SVG
-            </CardTitle>
-            <CardDescription>你可以直接修改SVG源码，保存为新表情包</CardDescription>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Code2 className="h-5 w-5" />
+                  直接编辑SVG
+                </CardTitle>
+                <CardDescription>你可以直接修改SVG源码，保存为新表情包</CardDescription>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={handleCopy}
+                disabled={loading !== null}
+                aria-label="复制SVG源码"
+              >
+                {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <Textarea
