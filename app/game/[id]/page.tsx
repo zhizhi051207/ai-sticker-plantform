@@ -17,12 +17,14 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ from?: string }>;
 }
 
-export default async function GamePage({ params }: PageProps) {
+export default async function GamePage({ params, searchParams }: PageProps) {
   const session = await getServerSession(authOptions);
 
   const { id } = await params;
+  const { from } = (await searchParams) ?? {};
   const game = await getGame(id);
 
   if (!game) {
@@ -34,6 +36,8 @@ export default async function GamePage({ params }: PageProps) {
     game.user?.email === session?.user?.email;
   const isLottie = game.contentType === "lottie";
   const isAnimatedSvg = game.contentType === "svg-animated";
+  const backHref = from === "public" ? "/games" : "/";
+  const backLabel = from === "public" ? "Back to Public Stickers" : "Back to Home";
 
 
 
@@ -41,9 +45,9 @@ export default async function GamePage({ params }: PageProps) {
     <div className="max-w-6xl mx-auto">
       <div className="mb-6">
         <Button variant="ghost" asChild className="mb-4">
-          <Link href="/">
+          <Link href={backHref}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
+            {backLabel}
           </Link>
         </Button>
         <div className="flex items-center justify-between">

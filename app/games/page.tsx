@@ -74,7 +74,7 @@ export default async function PublicGamesPage() {
               </CardContent>
               <CardFooter>
                 <Button className="w-full" asChild>
-                  <Link href={`/game/${game.id}`}>View Sticker</Link>
+                  <Link href={`/game/${game.id}?from=public`}>View Sticker</Link>
                 </Button>
               </CardFooter>
             </Card>
